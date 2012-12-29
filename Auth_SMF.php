@@ -964,10 +964,6 @@ class Auth_SMF extends AuthPlugin
 		// Check if we are connected to the database.
 		if (!$this->conn)
 			$this->pg_error("SMF was unable to connect to the database.<br />\n");
-
-		// Check if we were able to select the database.
-		if (!$db_selected)
-			$this->pg_error("SMF was unable to connect to the database.<br />\n");
 	}
 
 	/**
