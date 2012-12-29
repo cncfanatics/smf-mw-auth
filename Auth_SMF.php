@@ -288,7 +288,8 @@ function AutoAuthenticateSMF ($initial_user_data, &$user)
  */
 function UserLoginFormSMF (&$user)
 {
-	smf_sessionSetup();
+	global $wgServer;
+	$_SESSION['login_url'] = $wgServer;
 	smf_redirectWrapper('old_url', 'login');
 }
 
