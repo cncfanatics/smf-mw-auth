@@ -1000,7 +1000,7 @@ class Auth_SMF extends AuthPlugin
 
 		// Only if we are debugging.
 		if ($wgSMFDebug)
-			echo 'Postgres error: ' . pg_last_error()
+			echo 'Postgres error: ' . pg_last_error();
 
 		exit;
 	}
