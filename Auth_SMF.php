@@ -82,10 +82,11 @@ $wgAuth = new Auth_SMF();
 if (!defined('SMF_IN_WIKI'))
 	exit('Hacking attempt on SMF...');
 
-error_reporting(E_ALL); // Debug
-
 if(file_exists("$wgSMFPath/Settings.php"))
+{
 	require_once("$wgSMFPath/Settings.php");
+	require_once("$wgSMFPath/SSI.php");
+}
 else
 	die('Check to make sure $wgSMFPath is correctly set in LocalSettings.php!');
 
@@ -301,29 +302,8 @@ function UserLoginFormSMF (&$user)
  */
 function UserLogoutSMF (&$user)
 {
-	global $wgCookiePrefix, $wgSessionName;
-
-	// Log them out of wiki first.
-	$user->doLogout();
-
-	// Destory their session.
-	$wgCookiePrefix = strtr($wgCookiePrefix, "=,; +.\"'\\[", "__________");
-	$old_session = session_name(isset($wgSessionName) ? $wgSessionName : $wgCookiePrefix . '_session');
-	session_destroy();
-
-	// Destroy the cookie!
-    $params = session_get_cookie_params();
-    setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
-
-	// Back to whatever we had (we hope mediawiki).
-	session_name($old_session);
-
 	// Now SMFs turn.
 	smf_sessionSetup();
-
-	// This means we have no SMF session data or unable to find it.
-	if (empty($_SESSION['session_var']))
-		return true;
 
 	smf_redirectWrapper('logout_url', 'logout;' . $_SESSION['session_var'] . '=' . $_SESSION['session_value']);
 }
@@ -393,7 +373,7 @@ function smf_sessionSetup()
 		// Needed for SMF checks.
 		$_SESSION['rand_code'] = md5(session_id() . rand());
 		$_SESSION['USER_AGENT'] = $_SERVER['HTTP_USER_AGENT'];
-
+		
 		// Set the cookie.
 		$data = serialize(array(0, '', 0));
 		setcookie($smf_settings['cookiename'], $data, time() + 3600, '/', $wgCookieDomain, 0);
