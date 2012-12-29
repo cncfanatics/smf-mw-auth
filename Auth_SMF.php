@@ -963,36 +963,36 @@ class Auth_SMF extends AuthPlugin
 
 		// Check if we are connected to the database.
 		if (!$this->conn)
-			$this->pgerror("SMF was unable to connect to the database.<br />\n");
+			$this->pg_error("SMF was unable to connect to the database.<br />\n");
 
 		// Check if we were able to select the database.
 		if (!$db_selected)
-			$this->pgerror("SMF was unable to connect to the database.<br />\n");
+			$this->pg_error("SMF was unable to connect to the database.<br />\n");
 	}
 
 	/**
-	 * Run the query and if applicable display the mysql error.
+	 * Run the query and if applicable display the pg sql error.
 	 *
 	 * @param string $query
 	 * @return resource
 	 */
 	public function query($query)
 	{
-		$request = mysql_query($query, $this->conn);
+		$request = pg_query($query, $this->conn);
 
 		if(!$request)
-			$this->mysqlerror('Unable to view external table.');
+			$this->pg_error('Unable to view external table.');
 
 		return $request;
 	}
 
 	/**
-	 * Display an error when a mysql error is found.
+	 * Display an error when a SQL error is found.
 	 *
 	 * @param string $message
 	 * @access public
 	 */
-	public function mysqlerror($message)
+	public function pg_error($message)
 	{
 		global $wgSMFDebug;
 
@@ -1000,7 +1000,7 @@ class Auth_SMF extends AuthPlugin
 
 		// Only if we are debugging.
 		if ($wgSMFDebug)
-			echo 'mySQL error number: ', mysql_errno(), "<br />\n", 'mySQL error message: ', mysql_error(), "<br /><br />\n\n";
+			echo 'Postgres error: ' . pg_last_error()
 
 		exit;
 	}
