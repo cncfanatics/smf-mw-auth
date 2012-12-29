@@ -2,6 +2,7 @@
 /*
 SMF and MediaWiki Integration
 =============================
+Addapted for use with PGSQL by Sakari (sakari at evefit dot org)
 Author: SleePy (sleepy at simplemachines dot org)
 Original Author: Ryan Wagoner (rswagoner at gmail dot com)
 Version: 1.14
@@ -135,10 +136,10 @@ function AutoAuthenticateSMF ($initial_user_data, &$user)
 					AND is_activated = 1
 				LIMIT 1");
 
-			$user_settings = mysql_fetch_assoc($request);
+			$user_settings = pg_fetch_assoc($request);
 
 			$_SESSION['user_settings'] = serialize($user_settings);
-			mysql_free_result($request);
+			pg_free_result($request);
 		}
 		else
 			$user_settings = unserialize($_SESSION['user_settings']);
@@ -186,8 +187,8 @@ function AutoAuthenticateSMF ($initial_user_data, &$user)
 			ORDER BY date_registered ASC
 			LIMIT 1");
 
-		list($id) = mysql_fetch_row($request);
-		mysql_free_result($request);
+		list($id) = pg_fetch_row($request);
+		pg_free_result($request);
 
 		// Sorry your name was taken already!
 		if($id != $ID_MEMBER)
@@ -463,8 +464,8 @@ class Auth_SMF extends AuthPlugin
 			WHERE id_member = '{$smf_member_id}'
 			LIMIT 1");
 
-		list ($user) = mysql_fetch_row($request);
-		mysql_free_result($request);
+		list ($user) = pg_fetch_row($request);
+		pg_free_result($request);
 
 		// Play it safe and double check the match.
 		$_SESSION['smf_uE'] = strtolower($user) == strtolower($username) ? true : false;
@@ -499,8 +500,8 @@ class Auth_SMF extends AuthPlugin
 				AND is_activated = 1
 			LIMIT 1");
 
-		list($member_name, $passwd) = mysql_fetch_row($request);
-		mysql_free_result($request);
+		list($member_name, $passwd) = pg_fetch_row($request);
+		pg_free_result($request);
 
 		$pw = sha1(strtolower($username) . $password);
 
@@ -587,7 +588,7 @@ class Auth_SMF extends AuthPlugin
 			WHERE id_member = '{$smf_member_id}'
 			LIMIT 1");
 
-		while($row = mysql_fetch_assoc($request))
+		while($row = pg_fetch_assoc($request))
 		{
 			$user->setRealName($row['real_name']);
 			$user->setEmail($row['email_address']);
@@ -597,7 +598,7 @@ class Auth_SMF extends AuthPlugin
 			$user->setOption('smf_last_update', time());		
 			$user->saveSettings();
 		}
-		mysql_free_result($request);
+		pg_free_result($request);
 	
 		return true;
 	}
@@ -727,7 +728,7 @@ class Auth_SMF extends AuthPlugin
 			WHERE id_member = '{$smf_member_id}'
 			LIMIT 1");
 
-		while($row = mysql_fetch_assoc($request))
+		while($row = pg_fetch_assoc($request))
 		{
 			$user->setRealName($row[real_name]);
 			$user->setEmail($row[email_address]);
@@ -740,7 +741,7 @@ class Auth_SMF extends AuthPlugin
 			$user->setOption('smf_last_update', time());
 			$user->saveSettings();
 		}	
-		mysql_free_result($request);
+		pg_free_result($request);
 
 		return true;
 	}
@@ -791,8 +792,8 @@ class Auth_SMF extends AuthPlugin
 			ORDER BY date_registered ASC
 			LIMIT 1");
 
-		list($user) = mysql_fetch_row($request);
-		mysql_free_result($request);
+		list($user) = pg_fetch_row($request);
+		pg_free_result($request);
 
 		// No result play it safe and return the original.
 		$fixed_name = $user;
@@ -821,8 +822,8 @@ class Auth_SMF extends AuthPlugin
 			WHERE i.id_member = '{$id_member}'
 				AND (g.cannot_post = 1 OR g.cannot_login = 1)");
 
-		$banned = mysql_num_rows($request);
-		mysql_free_result($request);
+		$banned = pg_num_rows($request);
+		pg_free_result($request);
 
 		$_SESSION['smf_iNB_t'] = time();
 		$_SESSION['smf_iNB'] = $banned ? false : true;
@@ -957,19 +958,16 @@ class Auth_SMF extends AuthPlugin
 		global $smf_settings;
 
 		// Connect to database.
-		$this->conn = @mysql_pconnect($smf_settings['db_server'], $smf_settings['db_user'],
-	 		$smf_settings['db_passwd'], true);
+		$conn_string = sprintf("host=%s dbname=%s user=%s password=%s", $smf_settings['db_server'], $smf_settings['db_name'], $smf_settings['db_user'], $smf_settings['db_passwd']);
+		$this->conn = @pg_pconnect($conn_string);
 
 		// Check if we are connected to the database.
 		if (!$this->conn)
-			$this->mysqlerror("SMF was unable to connect to the database.<br />\n");
-
-		// Select database: this assumes the wiki and smf are in the same database.
-		$db_selected = @mysql_select_db($smf_settings['db_name'], $this->conn);
+			$this->pgerror("SMF was unable to connect to the database.<br />\n");
 
 		// Check if we were able to select the database.
 		if (!$db_selected)
-			$this->mysqlerror("SMF was unable to connect to the database.<br />\n");
+			$this->pgerror("SMF was unable to connect to the database.<br />\n");
 	}
 
 	/**
