@@ -974,7 +974,7 @@ class Auth_SMF extends AuthPlugin
 	 */
 	public function query($query)
 	{
-		$request = pg_query($query, $this->conn);
+		$request = pg_query($this->conn, $query);
 
 		if(!$request)
 			$this->pg_error('Unable to view external table.');
